@@ -20,7 +20,9 @@ executable KaomojiServer
                      , aeson
                      , bytestring
                      , containers
+                     , deepseq
                      , either
+                     , mtl
                      , random
                      , servant-server
                      , text

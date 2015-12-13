@@ -1,0 +1,7 @@
+FROM fpco/stack-build:lts-3.16
+
+ADD . /var/www/KaomojiServer
+WORKDIR /var/www/KaomojiServer
+
+CMD ["stack"]
+

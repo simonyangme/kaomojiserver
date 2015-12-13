@@ -1,11 +1,13 @@
 {-# LANGUAGE DataKinds #-}
 {-# LANGUAGE TypeFamilies #-}
+{-# LANGUAGE DeriveAnyClass #-}
 {-# LANGUAGE DeriveGeneric #-}
 {-# LANGUAGE TypeOperators #-}
 {-# LANGUAGE OverloadedStrings #-}
 
 module Main where
 
+import Control.DeepSeq
 import Control.Monad.IO.Class (liftIO)
 import Control.Monad.Reader
 import Control.Monad.Trans.Either
@@ -26,11 +28,18 @@ main = do
   d <- (eitherDecode <$> getJSON) :: IO (Either String [KaomojiEntry])
   case d of
     Left err -> putStrLn err
-    Right ks -> run 8081 (app . fmap processEntries $ ks)
+    Right ks -> do
+      putStrLn "Processing..."
+      let pk = filter ((/=0) . T.length . kaomojiText) . fmap processEntries $ ks
+      deepseq pk $ putStrLn "Done! Starting server..."
+      run 8081 (app pk)
   putStrLn "hello world"
 
-server :: ServerT API (Reader [KaomojiEntry])
-server = randomKaomoji
+serverT :: ServerT API (ReaderT [ProcessedKaomoji] IO)
+serverT = randomKaomoji :<|> randomEntry
+
+server :: [ProcessedKaomoji] -> Server API
+server pk = enter (Nat $ liftIO . (`runReaderT` pk)) serverT
 
 app :: [ProcessedKaomoji] -> Application
 app pk = serve (Proxy :: Proxy API) (server pk)
@@ -41,31 +50,41 @@ data KaomojiEntry = KaomojiEntry
   } deriving (Eq, Show, Generic)
 
 instance FromJSON KaomojiEntry
-instance ToJSON KaomojiEntry
 
 type API = QueryParam "keyword" String :> Get '[JSON] (Maybe T.Text)
+      :<|> "entry" :> QueryParam "keyword" String :> Get '[JSON] (Maybe ProcessedKaomoji)
 
 data ProcessedKaomoji = ProcessedKaomoji
   { keywords :: [T.Text]
   , kaomojiText :: T.Text
-  } deriving (Eq, Show, Generic)
+  } deriving (Eq, Show, Generic, NFData)
 
-randomKaomoji :: [ProcessedKaomoji] -> Maybe String -> EitherT ServantErr IO (Maybe T.Text)
-randomKaomoji ks Nothing = do
+instance ToJSON ProcessedKaomoji
+
+randomKaomoji :: Maybe String -> ReaderT [ProcessedKaomoji] IO (Maybe T.Text)
+randomKaomoji = (fmap.fmap) kaomojiText . randomEntry
+
+randomEntry :: Maybe String -> ReaderT [ProcessedKaomoji] IO (Maybe ProcessedKaomoji)
+randomEntry Nothing = do
+  ks <- ask
   randomElem <- liftIO $ randomFromList ks
-  return . Just . kaomojiText $ randomElem
-randomKaomoji ks (Just []) = randomKaomoji ks Nothing
-randomKaomoji ks (Just keyword) = do
-  let kw = T.pack keyword
+  return randomElem
+randomEntry (Just []) = randomEntry Nothing
+randomEntry (Just keyword) = do
+  ks <- ask
+  let kw = stem . T.toLower . T.pack $ keyword
   let newKs = filter (\(ProcessedKaomoji kws _) -> elem kw kws) ks
   randomElem <- liftIO $ randomFromList newKs
-  return . Just . kaomojiText $ randomElem
+  return randomElem
 
-randomFromList :: [a] -> IO a
+randomFromList :: [a] -> IO (Maybe a)
 randomFromList xs = do
   let l = length xs
-  ind <- liftIO $ randomRIO (0, l - 1)
-  return $ xs !! ind
+  case l of
+    0 -> return Nothing
+    _ -> do
+      ind <- liftIO $ randomRIO (0, l - 1)
+      return . Just $ xs !! ind
 
 processEntries :: KaomojiEntry -> ProcessedKaomoji
 processEntries (KaomojiEntry cats kmj) = ProcessedKaomoji processed kmj

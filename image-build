@@ -1,0 +1,6 @@
+#!/usr/bin/env zsh
+
+eval "$(docker-machine env default)"
+
+docker build -t kaomojiserver-builder -f Build.plan .
+

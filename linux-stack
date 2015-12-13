@@ -1,0 +1,13 @@
+#!/usr/bin/env zsh
+
+eval "$(docker-machine env default)"
+HOSTIP=`ip -4 addr show dev en0 | grep inet | awk '{print \$2}' | cut -d / -f 1`
+
+docker run --rm \
+       --add-host=dockerhost:${HOSTIP} \
+       -p 8081:8081 \
+       -v $HOME/projects/KaomojiServer/KaomojiServer-dist:/root/.local \
+       -v $HOME/projects/KaomojiServer/.stack-work:/var/www/KaomojiServer/.stack-work \
+       -v $HOME/.stack:/root/.stack \
+       kaomojiserver-builder:latest stack $@
+
