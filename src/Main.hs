@@ -51,8 +51,10 @@ data KaomojiEntry = KaomojiEntry
 
 instance FromJSON KaomojiEntry
 
-type API = QueryParam "keyword" String :> Get '[JSON] (Maybe T.Text)
-      :<|> "entry" :> QueryParam "keyword" String :> Get '[JSON] (Maybe ProcessedKaomoji)
+-- The Content-type header is a temporary fix until Servant solves this issue
+-- See issue https://github.com/haskell-servant/servant/issues/263 for latest
+type API = QueryParam "keyword" String :> Get '[JSON] (Headers '[Header "Content-type" String] (Maybe T.Text))
+      :<|> "entry" :> QueryParam "keyword" String :> Get '[JSON] (Headers '[Header "Content-type" String] (Maybe ProcessedKaomoji))
 
 data ProcessedKaomoji = ProcessedKaomoji
   { keywords :: [T.Text]
@@ -61,21 +63,21 @@ data ProcessedKaomoji = ProcessedKaomoji
 
 instance ToJSON ProcessedKaomoji
 
-randomKaomoji :: Maybe String -> ReaderT [ProcessedKaomoji] IO (Maybe T.Text)
-randomKaomoji = (fmap.fmap) kaomojiText . randomEntry
+randomKaomoji :: Maybe String -> ReaderT [ProcessedKaomoji] IO (Headers '[Header "Content-type" String] (Maybe T.Text))
+randomKaomoji = (fmap.fmap.fmap) kaomojiText . randomEntry
 
-randomEntry :: Maybe String -> ReaderT [ProcessedKaomoji] IO (Maybe ProcessedKaomoji)
+randomEntry :: Maybe String -> ReaderT [ProcessedKaomoji] IO (Headers '[Header "Content-type" String] (Maybe ProcessedKaomoji))
 randomEntry Nothing = do
   ks <- ask
   randomElem <- liftIO $ randomFromList ks
-  return randomElem
+  return $ addHeader "application/json; charset=utf-8" randomElem
 randomEntry (Just []) = randomEntry Nothing
 randomEntry (Just keyword) = do
   ks <- ask
   let kw = stem . T.toLower . T.pack $ keyword
   let newKs = filter (\(ProcessedKaomoji kws _) -> elem kw kws) ks
   randomElem <- liftIO $ randomFromList newKs
-  return randomElem
+  return $ addHeader "application/json; charset=utf-8" randomElem
 
 randomFromList :: [a] -> IO (Maybe a)
 randomFromList xs = do
