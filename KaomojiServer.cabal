@@ -24,8 +24,13 @@ executable KaomojiServer
                      , either
                      , mtl
                      , random
+                     , servant-docs
                      , servant-server
                      , text
                      , transformers
                      , wai
                      , warp
+  other-modules:       Glider.NLP.Language.English.Porter
+                     , Glider.NLP.Language.English.StopWords
+                     , Kaomoji.Types
+                     , Kaomoji.Server
