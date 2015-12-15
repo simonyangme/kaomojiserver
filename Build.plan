@@ -1,4 +1,4 @@
-FROM fpco/stack-build:lts-3.16
+FROM fpco/stack-build:lts-3.18
 
 ADD . /var/www/KaomojiServer
 WORKDIR /var/www/KaomojiServer
