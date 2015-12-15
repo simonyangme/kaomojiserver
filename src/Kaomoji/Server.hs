@@ -44,7 +44,7 @@ randomEntry (Just []) = randomEntry Nothing
 randomEntry (Just keyword) = do
   ks <- ask
   let kw = stem . T.toLower . T.pack $ keyword
-  let newKs = filter (\(ProcessedKaomoji kws _) -> elem kw kws) ks
+  let newKs = filter (\(ProcessedKaomoji kws _ _) -> elem kw kws) ks
   randomElem <- liftIO $ randomFromList newKs
   return $ addHeader "application/json; charset=utf-8" randomElem
 

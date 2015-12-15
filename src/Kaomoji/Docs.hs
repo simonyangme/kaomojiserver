@@ -32,7 +32,7 @@ instance ToSample (Maybe T.Text) (Maybe T.Text) where
   toSample _ = Just $ Just "=^‥^="
 
 instance ToSample (Maybe ProcessedKaomoji) (Maybe ProcessedKaomoji) where
-  toSample _ = Just . Just $ ProcessedKaomoji ["cat"] "=^‥^="
+  toSample _ = Just . Just $ ProcessedKaomoji ["cute", "cat"] ["Cute", "Cats"] "=^‥^="
 
 apiDocs :: API
 apiDocs = docs S.api

@@ -38,7 +38,7 @@ app pk = serve (Proxy :: Proxy DocsAPI) (server pk :<|> serveDocs)
         plain = ("Content-Type", "text/plain; charset=utf8")
 
 processEntries :: KaomojiEntry -> ProcessedKaomoji
-processEntries (KaomojiEntry cats kmj) = ProcessedKaomoji processed kmj
+processEntries (KaomojiEntry cats kmj) = ProcessedKaomoji processed cats kmj
   where
     processed = processWords . T.words . T.toLower . T.unwords $ cats
 

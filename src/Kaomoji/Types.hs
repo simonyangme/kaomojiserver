@@ -20,6 +20,7 @@ instance FromJSON KaomojiEntry
 
 data ProcessedKaomoji = ProcessedKaomoji
   { keywords :: [T.Text]
+  , originalCategories :: [T.Text]
   , kaomojiText :: T.Text
   } deriving (Eq, Show, Generic, NFData)
 
