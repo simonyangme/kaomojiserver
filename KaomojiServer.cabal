@@ -22,8 +22,10 @@ executable KaomojiServer
                      , containers
                      , deepseq
                      , either
+                     , http-types
                      , mtl
                      , random
+                     , servant
                      , servant-docs
                      , servant-server
                      , text
@@ -34,3 +36,4 @@ executable KaomojiServer
                      , Glider.NLP.Language.English.StopWords
                      , Kaomoji.Types
                      , Kaomoji.Server
+                     , Kaomoji.Docs

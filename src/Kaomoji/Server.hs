@@ -7,7 +7,8 @@
 
 module Kaomoji.Server
        ( API
-       , server)
+       , server
+       , api)
        where
 
 import Control.Monad.Reader
@@ -27,6 +28,9 @@ serverT = randomKaomoji :<|> randomEntry
 
 server :: [ProcessedKaomoji] -> Server API
 server pk = enter (Nat $ liftIO . (`runReaderT` pk)) serverT
+
+api :: Proxy API
+api = Proxy
 
 randomKaomoji :: Maybe String -> ReaderT [ProcessedKaomoji] IO (Headers '[Header "Content-type" String] (Maybe T.Text))
 randomKaomoji = (fmap.fmap.fmap) kaomojiText . randomEntry

@@ -1,3 +1,6 @@
+{-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE ScopedTypeVariables #-}
+{-# LANGUAGE TypeOperators #-}
 module Main where
 
 import Control.DeepSeq
@@ -6,8 +9,10 @@ import qualified Data.ByteString.Lazy as B
 import qualified Data.Text as T
 import Glider.NLP.Language.English.Porter
 import Glider.NLP.Language.English.StopWords
+import Kaomoji.Docs
 import Kaomoji.Server
 import Kaomoji.Types
+import Network.HTTP.Types
 import Network.Wai
 import Network.Wai.Handler.Warp
 import Servant
@@ -24,8 +29,13 @@ main = do
       run 8081 (app pk)
   putStrLn "hello world"
 
+type DocsAPI = API :<|> Raw
+
 app :: [ProcessedKaomoji] -> Application
-app pk = serve (Proxy :: Proxy API) (server pk)
+app pk = serve (Proxy :: Proxy DocsAPI) (server pk :<|> serveDocs)
+  where serveDocs _ respond =
+          respond $ responseLBS ok200 [plain] docsBS
+        plain = ("Content-Type", "text/plain; charset=utf8")
 
 processEntries :: KaomojiEntry -> ProcessedKaomoji
 processEntries (KaomojiEntry cats kmj) = ProcessedKaomoji processed kmj
