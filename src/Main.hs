@@ -1,3 +1,4 @@
+{-# LANGUAGE DataKinds #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE ScopedTypeVariables #-}
 {-# LANGUAGE TypeOperators #-}
@@ -29,7 +30,7 @@ main = do
       run 8081 (app pk)
   putStrLn "hello world"
 
-type DocsAPI = API :<|> Raw
+type DocsAPI = API :<|> "api" :> Raw
 
 app :: [ProcessedKaomoji] -> Application
 app pk = serve (Proxy :: Proxy DocsAPI) (server pk :<|> serveDocs)
