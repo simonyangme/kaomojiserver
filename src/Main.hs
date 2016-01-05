@@ -17,6 +17,7 @@ import Network.HTTP.Types
 import Network.Wai
 import Network.Wai.Handler.Warp
 import Servant
+import Servant.Utils.StaticFiles (serveDirectory)
 
 main :: IO ()
 main = do
@@ -30,10 +31,10 @@ main = do
       run 8081 (app pk)
   putStrLn "hello world"
 
-type DocsAPI = API :<|> "api" :> Raw
+type DocsAPI = "api" :> Raw :<|> API :<|> Raw
 
 app :: [ProcessedKaomoji] -> Application
-app pk = serve (Proxy :: Proxy DocsAPI) (server pk :<|> serveDocs)
+app pk = serve (Proxy :: Proxy DocsAPI) (serveDocs :<|> server pk :<|> serveDirectory "./root/")
   where serveDocs _ respond =
           respond $ responseLBS ok200 [plain] docsBS
         plain = ("Content-Type", "text/plain; charset=utf8")

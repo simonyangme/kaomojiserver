@@ -20,7 +20,7 @@ import System.Random (randomRIO)
 
 -- The Content-type header is a temporary fix until Servant solves this issue
 -- See issue https://github.com/haskell-servant/servant/issues/263 for latest
-type API = QueryParam "keyword" String :> Get '[JSON] (Headers '[Header "Content-type" String] (Maybe T.Text))
+type API = "kaomoji" :> QueryParam "keyword" String :> Get '[JSON] (Headers '[Header "Content-type" String] (Maybe T.Text))
       :<|> "entry" :> QueryParam "keyword" String :> Get '[JSON] (Headers '[Header "Content-type" String] (Maybe ProcessedKaomoji))
 
 serverT :: ServerT API (ReaderT [ProcessedKaomoji] IO)
